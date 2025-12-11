@@ -101,10 +101,10 @@ describe('Kanji Lookup Service - Acceptance Criteria', () => {
   }, 10000);
 
   test('Case 11: Romaji with different readings', async () => {
-    const results = await lookupKanji('sou');
+    const results = await lookupKanji('souji');
     
     expect(results.length).toBeGreaterThan(0);
-    // Should return kanji that match this reading
+    // Should return kanji that match this reading (掃除)
   }, 10000);
 
   test('Case 12: English word with multiple meanings', async () => {

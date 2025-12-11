@@ -13,7 +13,10 @@ export async function initializeTokenizer() {
   if (tokenizer) return tokenizer;
   
   return new Promise((resolve, reject) => {
-    kuromoji.builder({ dicPath: join(__dirname, '../../node_modules/kuromoji/dict') })
+    // Find the dict path - services/ is one level down from backend/
+    const dictPath = join(__dirname, '../node_modules/kuromoji/dict');
+    
+    kuromoji.builder({ dicPath: dictPath })
       .build((err, tok) => {
         if (err) {
           reject(err);
