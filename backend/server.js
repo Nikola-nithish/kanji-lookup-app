@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { lookupKanji } from './services/kanjiService.js';
+import radicalsRouter from './routes/radicals.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,6 +29,9 @@ app.get('/api/lookup', async (req, res) => {
     res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 });
+
+// Radicals routes
+app.use('/api/radicals', radicalsRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

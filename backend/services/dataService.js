@@ -3,16 +3,46 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import xml2js from 'xml2js';
+import Database from 'better-sqlite3';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// In-memory cache for parsed data
+const DB_PATH = path.join(__dirname, '../data/kanji.db');
+
+// Database connection (lazy initialized)
+let db = null;
+let useDatabase = false;
+
+// In-memory cache for parsed data (used when database is not available)
 let kanjiData = new Map();
 let vocabData = new Map();
 let kanjiVGData = new Map();
 let radicalIndex = new Map();
 let componentIndex = new Map();
+
+/**
+ * Initialize database connection if available
+ */
+function initializeDatabase() {
+  if (db !== null) return useDatabase;
+  
+  try {
+    if (fs.existsSync(DB_PATH)) {
+      db = new Database(DB_PATH, { readonly: true });
+      useDatabase = true;
+      console.log('Using SQLite database for kanji data');
+    } else {
+      console.log('SQLite database not found, using sample data');
+      useDatabase = false;
+    }
+  } catch (error) {
+    console.error('Error opening database:', error);
+    useDatabase = false;
+  }
+  
+  return useDatabase;
+}
 
 /**
  * Load sample kanji data (embedded for demo purposes)
@@ -279,6 +309,46 @@ export function loadKanjiVGData() {
  * Get kanji information by character
  */
 export function getKanjiInfo(character) {
+  if (!character || typeof character !== 'string') return null;
+  
+  initializeDatabase();
+  
+  // Try database first if it exists and has data
+  if (useDatabase && db) {
+    try {
+      const stmt = db.prepare(`
+        SELECT character, stroke_count, radical, grade, jlpt_level, frequency,
+               onyomi, kunyomi, meanings, components
+        FROM kanji
+        WHERE character = ?
+      `);
+      const row = stmt.get(character);
+      
+      if (row) {
+        return {
+          character: row.character,
+          stroke_count: row.stroke_count,
+          radical: row.radical,
+          grade: row.grade,
+          jlpt_level: row.jlpt_level,
+          freq: row.frequency,
+          onyomi: row.onyomi ? JSON.parse(row.onyomi) : [],
+          kunyomi: row.kunyomi ? JSON.parse(row.kunyomi) : [],
+          meanings: row.meanings ? JSON.parse(row.meanings) : [],
+          components: row.components ? JSON.parse(row.components) : [],
+          source_ids: {
+            unicode: `U+${character.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`
+          }
+        };
+      }
+      
+      // No result from database, fall back to sample data
+    } catch (error) {
+      console.error('Error fetching kanji info from database:', error);
+    }
+  }
+  
+  // Fallback to sample data
   if (kanjiData.size === 0) loadKanjiData();
   return kanjiData.get(character);
 }
@@ -343,6 +413,22 @@ export function searchVocabByGloss(englishTerm) {
  * Get stroke order SVG for a kanji
  */
 export function getStrokeOrderSVG(character) {
+  if (!character || typeof character !== 'string') return null;
+  
+  initializeDatabase();
+  
+  if (useDatabase && db) {
+    try {
+      const stmt = db.prepare('SELECT svg_data FROM kanjivg WHERE character = ?');
+      const row = stmt.get(character);
+      if (row) return row.svg_data;
+      // No result from database, fall back to sample data
+    } catch (error) {
+      console.error('Error fetching SVG from database:', error);
+    }
+  }
+  
+  // Fallback to sample data
   if (kanjiVGData.size === 0) loadKanjiVGData();
   return kanjiVGData.get(character);
 }
@@ -351,6 +437,24 @@ export function getStrokeOrderSVG(character) {
  * Get related kanji by radical
  */
 export function getRelatedByRadical(radical) {
+  if (!radical || typeof radical !== 'string') return [];
+  
+  initializeDatabase();
+  
+  if (useDatabase && db) {
+    try {
+      const stmt = db.prepare('SELECT character FROM kanji WHERE radical = ?');
+      const rows = stmt.all(radical);
+      if (rows.length > 0) {
+        return rows.map(row => row.character);
+      }
+      // No results from database, fall back to sample data
+    } catch (error) {
+      console.error('Error fetching kanji by radical from database:', error);
+    }
+  }
+  
+  // Fallback to sample data
   if (kanjiData.size === 0) loadKanjiData();
   return radicalIndex.get(radical) || [];
 }
@@ -359,16 +463,124 @@ export function getRelatedByRadical(radical) {
  * Get related kanji by component
  */
 export function getRelatedByComponent(component) {
+  if (!component || typeof component !== 'string') return [];
+  
   if (kanjiData.size === 0) loadKanjiData();
   return componentIndex.get(component) || [];
+}
+
+/**
+ * Get radicals by stroke count
+ */
+export function getRadicalsByStrokeCount(strokeCount) {
+  if (typeof strokeCount !== 'number' || strokeCount < 1) return [];
+  
+  initializeDatabase();
+  
+  if (useDatabase && db) {
+    try {
+      const stmt = db.prepare('SELECT radical, stroke_count, meaning, readings FROM radicals WHERE stroke_count = ? ORDER BY radical');
+      const rows = stmt.all(strokeCount);
+      return rows;
+    } catch (error) {
+      console.error('Error fetching radicals by stroke count from database:', error);
+    }
+  }
+  
+  // Fallback: no sample radical data available
+  return [];
+}
+
+/**
+ * Get all radicals grouped by stroke count
+ */
+export function getAllRadicals() {
+  initializeDatabase();
+  
+  if (useDatabase && db) {
+    try {
+      const stmt = db.prepare('SELECT radical, stroke_count, meaning, readings FROM radicals ORDER BY stroke_count, radical');
+      const rows = stmt.all();
+      
+      // Group by stroke count
+      const grouped = {};
+      for (const row of rows) {
+        if (!grouped[row.stroke_count]) {
+          grouped[row.stroke_count] = [];
+        }
+        grouped[row.stroke_count].push(row);
+      }
+      
+      return grouped;
+    } catch (error) {
+      console.error('Error fetching all radicals from database:', error);
+    }
+  }
+  
+  // Fallback: no sample radical data available
+  return {};
+}
+
+/**
+ * Get all kanji containing a specific radical
+ */
+export function getKanjiByRadical(radical) {
+  if (!radical || typeof radical !== 'string') return [];
+  
+  initializeDatabase();
+  
+  if (useDatabase && db) {
+    try {
+      const stmt = db.prepare(`
+        SELECT character, stroke_count, radical, grade, jlpt_level, frequency, 
+               onyomi, kunyomi, meanings, components
+        FROM kanji 
+        WHERE radical = ?
+        ORDER BY frequency
+      `);
+      const rows = stmt.all(radical);
+      
+      if (rows.length > 0) {
+        // Parse JSON fields
+        return rows.map(row => ({
+          character: row.character,
+          stroke_count: row.stroke_count,
+          radical: row.radical,
+          grade: row.grade,
+          jlpt_level: row.jlpt_level,
+          frequency: row.frequency,
+          onyomi: row.onyomi ? JSON.parse(row.onyomi) : [],
+          kunyomi: row.kunyomi ? JSON.parse(row.kunyomi) : [],
+          meanings: row.meanings ? JSON.parse(row.meanings) : [],
+          components: row.components ? JSON.parse(row.components) : []
+        }));
+      }
+      // No results from database, fall back to sample data
+    } catch (error) {
+      console.error('Error fetching kanji by radical from database:', error);
+    }
+  }
+  
+  // Fallback to sample data
+  const relatedChars = getRelatedByRadical(radical);
+  return relatedChars.map(char => {
+    const info = getKanjiInfo(char);
+    return info || { character: char };
+  }).filter(k => k !== null);
 }
 
 /**
  * Initialize all data
  */
 export function initializeData() {
-  loadKanjiData();
-  loadVocabData();
-  loadKanjiVGData();
-  console.log(`Loaded ${kanjiData.size} kanji, ${vocabData.size} vocab entries, ${kanjiVGData.size} stroke order diagrams`);
+  initializeDatabase();
+  
+  if (useDatabase) {
+    console.log('Using SQLite database');
+  } else {
+    loadKanjiData();
+    loadVocabData();
+    loadKanjiVGData();
+    console.log(`Loaded ${kanjiData.size} kanji, ${vocabData.size} vocab entries, ${kanjiVGData.size} stroke order diagrams`);
+  }
 }
