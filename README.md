@@ -171,6 +171,102 @@ Health check endpoint.
 }
 ```
 
+### GET /api/radicals
+
+Get all radicals grouped by stroke count, or filter by specific stroke count.
+
+**Query Parameters**:
+- `strokes` (optional): Filter by stroke count (1-28)
+
+**Example Requests**:
+```bash
+# Get all radicals
+curl "http://localhost:3001/api/radicals"
+
+# Get radicals with 3 strokes
+curl "http://localhost:3001/api/radicals?strokes=3"
+```
+
+**Response Format** (all radicals):
+```json
+{
+  "radicals": {
+    "1": [
+      {
+        "radical": "一",
+        "stroke_count": 1,
+        "meaning": "one",
+        "readings": "いち"
+      }
+    ],
+    "3": [
+      {
+        "radical": "口",
+        "stroke_count": 3,
+        "meaning": "mouth",
+        "readings": "くち"
+      }
+    ]
+  }
+}
+```
+
+**Response Format** (filtered by strokes):
+```json
+{
+  "stroke_count": 3,
+  "radicals": [
+    {
+      "radical": "口",
+      "stroke_count": 3,
+      "meaning": "mouth",
+      "readings": "くち"
+    },
+    {
+      "radical": "土",
+      "stroke_count": 3,
+      "meaning": "earth",
+      "readings": "つち"
+    }
+  ]
+}
+```
+
+### GET /api/radicals/:radical/kanji
+
+Get all kanji that contain a specific radical.
+
+**Path Parameters**:
+- `radical` (required): The radical character (e.g., 口, 手, ⻌)
+
+**Example Request**:
+```bash
+# Get all kanji with radical 手 (hand)
+curl "http://localhost:3001/api/radicals/手/kanji"
+```
+
+**Response Format**:
+```json
+{
+  "radical": "手",
+  "count": 3,
+  "kanji": [
+    {
+      "character": "掃",
+      "stroke_count": 11,
+      "radical": "手",
+      "grade": 8,
+      "jlpt_level": 2,
+      "frequency": 2035,
+      "onyomi": ["ソウ"],
+      "kunyomi": ["は.く"],
+      "meanings": ["sweep", "clean"],
+      "components": ["手", "帚"]
+    }
+  ]
+}
+```
+
 ## Testing
 
 ### Backend Tests
@@ -218,18 +314,67 @@ This application uses the following open data sources:
 - **License**: Apache License 2.0
 - **Usage**: Text tokenization and dictionary form extraction
 
-## Sample Data
+## Database Setup (Optional - Recommended for Full Functionality)
 
-The current implementation includes embedded sample data for demonstration purposes. For production use:
+The application works with embedded sample data (5 kanji) out of the box. For full kanji lookup functionality with thousands of kanji and vocabulary:
 
-1. **Download data files**:
-   - KANJIDIC2: http://www.edrdg.org/kanjidic/kanjidic2.xml.gz
-   - JMdict: http://ftp.edrdg.org/pub/Nihongo/JMdict.gz
-   - KanjiVG: https://github.com/KanjiVG/kanjivg/releases
+### 1. Download Data Files
 
-2. **Extract files** to the `backend/data/` directory
+Download these open-source Japanese language data files:
 
-3. **Update data service** to parse XML files instead of using embedded data
+- **JMdict** (Japanese-English dictionary):
+  - URL: http://ftp.edrdg.org/pub/Nihongo/JMdict_e_examp.gz
+  - Extract to get the JSON version: `jmdict-eng-3.6.1+20251208123023.json`
+  - Alternative: Use the official JMdict releases
+
+- **KanjiVG** (Stroke order diagrams):
+  - URL: https://github.com/KanjiVG/kanjivg/releases
+  - Download and extract the release
+  - You need the folder containing `.svg` files (e.g., `kanjivg-20220427`)
+
+### 2. Place Data Files
+
+Create the data directory and place files:
+
+```bash
+cd backend
+mkdir -p data
+
+# Place your files:
+# - data/jmdict-eng-3.6.1+20251208123023.json
+# - data/kanjivg/ (folder with .svg files)
+```
+
+### 3. Run Import Script
+
+Import the data into SQLite database:
+
+```bash
+cd backend
+node scripts/importData.js
+```
+
+This will:
+- Create `backend/data/kanji.db` SQLite database
+- Import all 214 Kangxi radicals with stroke counts
+- Parse and import JMdict vocabulary data (if available)
+- Import KanjiVG stroke order diagrams (if available)
+
+**Note**: The import script gracefully handles missing data files. It will always import the radicals, and skip JMdict/KanjiVG if files are not present.
+
+### 4. Restart the Server
+
+The application automatically detects the database and uses it:
+
+```bash
+npm start
+```
+
+You'll see: `Using SQLite database for kanji data` in the logs.
+
+### Fallback Behavior
+
+If the database doesn't exist, the app automatically falls back to sample data (5 kanji). This ensures the application always works, even without the full dataset.
 
 ## Project Structure
 
@@ -237,10 +382,16 @@ The current implementation includes embedded sample data for demonstration purpo
 kanji-lookup-app/
 ├── backend/
 │   ├── server.js              # Express server
+│   ├── routes/
+│   │   └── radicals.js        # Radical search API routes
 │   ├── services/
 │   │   ├── normalization.js   # Input normalization
-│   │   ├── dataService.js     # Data loading and indexing
+│   │   ├── dataService.js     # Data loading and indexing (SQLite + fallback)
 │   │   └── kanjiService.js    # Main lookup logic
+│   ├── scripts/
+│   │   └── importData.js      # Database import script
+│   ├── data/
+│   │   └── kanji.db           # SQLite database (created after import)
 │   ├── tests/
 │   │   ├── normalization.test.js
 │   │   └── kanjiService.test.js
