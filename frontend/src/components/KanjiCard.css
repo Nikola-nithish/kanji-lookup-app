@@ -1,0 +1,329 @@
+.kanji-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.kanji-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.kanji-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.kanji-char {
+  font-size: 4rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.kanji-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #f5f5f5;
+  border-color: #667eea;
+  transform: translateY(-1px);
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  overflow-x: auto;
+}
+
+.tab {
+  flex: 1;
+  min-width: 120px;
+  padding: 1rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: white;
+}
+
+.tab-content {
+  padding: 2rem;
+}
+
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.readings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.reading-section h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.reading-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.reading-tag {
+  padding: 0.4rem 0.8rem;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #1565c0;
+  font-weight: 500;
+}
+
+.meanings h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.meanings p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+.components h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.component-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.component-tag {
+  padding: 0.4rem 0.8rem;
+  background: #f3e5f5;
+  border: 1px solid #ce93d8;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  color: #6a1b9a;
+  font-weight: 500;
+}
+
+.source-ids {
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.source-ids h4 {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.source-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.source-tag {
+  padding: 0.3rem 0.6rem;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #666;
+  font-family: monospace;
+}
+
+.stroke-order {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.svg-container {
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.svg-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.compounds {
+  min-height: 200px;
+}
+
+.word-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.word-item {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.word-main {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.word-reading {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.word-gloss {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.related {
+  min-height: 200px;
+}
+
+.related h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.related-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.related-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.related-kanji {
+  font-size: 2rem;
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.related-kanji:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: scale(1.1);
+}
+
+.no-data {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .kanji-char {
+    font-size: 3rem;
+  }
+
+  .tab-content {
+    padding: 1.5rem;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .readings {
+    grid-template-columns: 1fr;
+  }
+
+  .word-main {
+    font-size: 1.2rem;
+  }
+
+  .related-kanji {
+    font-size: 1.5rem;
+  }
+}

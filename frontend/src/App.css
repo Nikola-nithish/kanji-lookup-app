@@ -1,0 +1,90 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem 1rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin-top: 0.5rem;
+  opacity: 0.9;
+  font-size: 1rem;
+}
+
+.app-main {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #667eea;
+}
+
+.error {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: #c33;
+}
+
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.results {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.app-footer {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  text-align: center;
+  color: #666;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 2rem;
+}
+
+.app-footer p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 2rem;
+  }
+
+  .app-main {
+    padding: 1rem;
+  }
+
+  .results {
+    gap: 1.5rem;
+  }
+}
